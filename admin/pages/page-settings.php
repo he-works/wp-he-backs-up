@@ -9,7 +9,7 @@ function hbu_page_settings() {
         'storage_gdrive_enabled' => 0,
         'local_retention_count'  => 10,
         'schedule_enabled'       => 0,
-        'schedule_frequency'     => 'daily',
+        'schedule_frequency'     => 'hbu_weekly',
     ) );
 
     $msg = isset( $_GET['hbu_msg'] ) ? sanitize_key( $_GET['hbu_msg'] ) : '';
@@ -98,9 +98,9 @@ function hbu_page_settings() {
                         <th><label for="schedule_frequency">백업 주기</label></th>
                         <td>
                             <select id="schedule_frequency" name="schedule_frequency">
-                                <option value="daily" <?php selected( $settings['schedule_frequency'], 'daily' ); ?>>매일</option>
-                                <option value="hbu_weekly" <?php selected( $settings['schedule_frequency'], 'hbu_weekly' ); ?>>매주</option>
-                                <option value="hbu_monthly" <?php selected( $settings['schedule_frequency'], 'hbu_monthly' ); ?>>매월</option>
+                                <option value="daily"        <?php selected( $settings['schedule_frequency'], 'daily' ); ?>>매일 (새벽 4시)</option>
+                                <option value="hbu_weekly"   <?php selected( $settings['schedule_frequency'], 'hbu_weekly' ); ?>>매주 (토요일 새벽 4시)</option>
+                                <option value="hbu_biweekly" <?php selected( $settings['schedule_frequency'], 'hbu_biweekly' ); ?>>격주 (토요일 새벽 4시)</option>
                             </select>
 
                             <?php $next = HBU_Cron_Manager::next_scheduled(); ?>

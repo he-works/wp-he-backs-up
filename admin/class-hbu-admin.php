@@ -146,7 +146,9 @@ class HBU_Admin {
             'storage_gdrive_enabled' => isset( $_POST['storage_gdrive_enabled'] ) ? 1 : 0,
             'local_retention_count'  => max( 1, absint( $_POST['local_retention_count'] ?? 10 ) ),
             'schedule_enabled'       => isset( $_POST['schedule_enabled'] ) ? 1 : 0,
-            'schedule_frequency'     => sanitize_key( $_POST['schedule_frequency'] ?? 'daily' ),
+            'schedule_frequency'     => in_array( $_POST['schedule_frequency'] ?? '', array( 'daily', 'hbu_weekly', 'hbu_biweekly' ), true )
+                                            ? sanitize_key( $_POST['schedule_frequency'] )
+                                            : 'hbu_weekly',
         );
 
         update_option( 'hbu_settings', $settings );

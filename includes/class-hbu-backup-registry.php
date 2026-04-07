@@ -55,6 +55,26 @@ class HBU_Backup_Registry {
         return null;
     }
 
+    /**
+     * 특정 백업 엔트리에서 저장 위치 하나를 제거합니다.
+     * 예: Google Drive 보존 정책으로 Drive 파일만 삭제됐을 때 사용.
+     */
+    public static function remove_location( $id, $location ) {
+        $all = self::get_all();
+        foreach ( $all as &$entry ) {
+            if ( $entry['id'] === $id ) {
+                $entry['locations'] = array_values( array_filter( $entry['locations'], function( $l ) use ( $location ) {
+                    return $l !== $location;
+                } ) );
+                if ( $location === 'gdrive' ) {
+                    $entry['gdrive_file_id'] = '';
+                }
+                break;
+            }
+        }
+        update_option( self::OPTION_KEY, array_values( $all ) );
+    }
+
     public static function update_locations( $id, $locations, $gdrive_file_id = '' ) {
         $all = self::get_all();
         foreach ( $all as &$entry ) {

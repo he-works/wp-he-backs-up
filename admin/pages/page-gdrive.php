@@ -67,11 +67,14 @@ function hbu_page_gdrive() {
                     <table class="form-table" style="max-width:500px;">
                         <tr>
                             <th style="width:130px;">백업 폴더</th>
-                            <td><strong>He-Backs-Up</strong></td>
-                        </tr>
-                        <tr>
-                            <th>폴더 ID</th>
-                            <td><code><?php echo esc_html( $folder_id ); ?></code></td>
+                            <td>
+                                <strong>He-Backs-Up</strong>
+                                &nbsp;
+                                <a href="<?php echo esc_url( 'https://drive.google.com/drive/folders/' . $folder_id ); ?>"
+                                   target="_blank" rel="noopener noreferrer" class="button button-small">
+                                    Google Drive에서 열기 &nbsp;↗
+                                </a>
+                            </td>
                         </tr>
                     </table>
                 <?php endif; ?>

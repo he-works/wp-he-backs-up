@@ -24,34 +24,73 @@ class HBU_Cron_Manager {
     }
 
     /**
-     * WP-Cron에 주간/월간 인터벌을 추가합니다.
+     * WP-Cron에 주간/격주 인터벌을 추가합니다.
      */
     public function add_custom_intervals( $schedules ) {
         $schedules['hbu_weekly'] = array(
-            'interval' => 604800,
+            'interval' => 604800,   // 1주
             'display'  => '매주',
         );
-        $schedules['hbu_monthly'] = array(
-            'interval' => 2592000,
-            'display'  => '매월',
+        $schedules['hbu_biweekly'] = array(
+            'interval' => 1209600,  // 2주
+            'display'  => '격주',
         );
         return $schedules;
     }
 
     /**
      * 예약 백업을 등록합니다.
+     * - 매일       → 다음 새벽 4시
+     * - 매주/격주  → 다음 토요일 새벽 4시
      *
-     * @param string $frequency 'daily' | 'hbu_weekly' | 'hbu_monthly'
+     * @param string $frequency 'daily' | 'hbu_weekly' | 'hbu_biweekly'
      */
     public static function schedule( $frequency ) {
         self::unschedule();
 
-        if ( ! in_array( $frequency, array( 'daily', 'hbu_weekly', 'hbu_monthly' ), true ) ) {
+        if ( ! in_array( $frequency, array( 'daily', 'hbu_weekly', 'hbu_biweekly' ), true ) ) {
             $frequency = 'daily';
         }
 
-        wp_schedule_event( time(), $frequency, self::HOOK );
-        HBU_Logger::info( "예약 백업 등록: {$frequency}" );
+        $first_run = self::calc_first_run( $frequency );
+        wp_schedule_event( $first_run, $frequency, self::HOOK );
+        HBU_Logger::info( "예약 백업 등록: {$frequency} (첫 실행: " . gmdate( 'Y-m-d H:i', $first_run ) . ' UTC)' );
+    }
+
+    /**
+     * 첫 실행 시각을 계산합니다 (사이트 타임존 기준 새벽 4시).
+     *
+     * @param string $frequency
+     * @return int Unix timestamp (UTC)
+     */
+    private static function calc_first_run( $frequency ) {
+        $tz  = wp_timezone();
+        $now = new DateTime( 'now', $tz );
+
+        $run = clone $now;
+        $run->setTime( 4, 0, 0 );
+
+        if ( $frequency === 'daily' ) {
+            // 오늘 새벽 4시가 이미 지났으면 내일로
+            if ( $run->getTimestamp() <= $now->getTimestamp() ) {
+                $run->modify( '+1 day' );
+            }
+        } else {
+            // 매주/격주 → 토요일(6) 새벽 4시
+            $dow              = (int) $run->format( 'w' ); // 0=일, 6=토
+            $days_to_saturday = ( 6 - $dow + 7 ) % 7;
+
+            // 오늘이 토요일이면서 아직 4시 전이면 오늘 사용, 아니면 다음 주 토요일
+            if ( $days_to_saturday === 0 && $run->getTimestamp() <= $now->getTimestamp() ) {
+                $days_to_saturday = 7;
+            }
+
+            if ( $days_to_saturday > 0 ) {
+                $run->modify( "+{$days_to_saturday} days" );
+            }
+        }
+
+        return $run->getTimestamp();
     }
 
     /**

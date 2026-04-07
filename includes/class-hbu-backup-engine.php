@@ -112,6 +112,9 @@ class HBU_Backup_Engine {
         if ( $local_enabled && $retention > 0 ) {
             HBU_Local_Storage::enforce_retention( $retention );
         }
+        if ( $gdrive_enabled && $retention > 0 ) {
+            self::enforce_gdrive_retention( $retention );
+        }
 
         delete_transient( 'hbu_backup_progress' );
         HBU_Logger::info( "백업 완료: {$filename} (" . size_format( $zip_size ) . ')' );
@@ -139,6 +142,35 @@ class HBU_Backup_Engine {
         }
 
         return HBU_GDrive_Client::upload_chunked( $zip_path, $filename, $folder_id, $token );
+    }
+
+    private static function enforce_gdrive_retention( $max_count ) {
+        // 레지스트리에서 Google Drive에 저장된 백업만 추출 (최신순)
+        $all_backups   = HBU_Backup_Registry::get_all();
+        $gdrive_backups = array_values( array_filter( $all_backups, function( $b ) {
+            return in_array( 'gdrive', $b['locations'], true );
+        } ) );
+
+        if ( count( $gdrive_backups ) <= $max_count ) {
+            return;
+        }
+
+        $token     = HBU_GDrive_Auth::get_valid_token();
+        $to_delete = array_slice( $gdrive_backups, $max_count );
+
+        foreach ( $to_delete as $backup ) {
+            if ( ! empty( $backup['gdrive_file_id'] ) && $token ) {
+                HBU_GDrive_Client::delete_file( $backup['gdrive_file_id'], $token );
+                HBU_Logger::info( 'Google Drive 보존 정책으로 삭제: ' . $backup['filename'] );
+            }
+
+            // 로컬에도 없으면 레지스트리에서 제거, 있으면 locations에서 gdrive만 제거
+            if ( ! in_array( 'local', $backup['locations'], true ) ) {
+                HBU_Backup_Registry::remove( $backup['id'] );
+            } else {
+                HBU_Backup_Registry::remove_location( $backup['id'], 'gdrive' );
+            }
+        }
     }
 
     private static function cleanup( $files ) {
