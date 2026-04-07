@@ -22,7 +22,7 @@ function hbu_page_dashboard() {
     );
     ?>
     <div class="wrap hbu-wrap">
-        <h1>He Backs Up <span class="hbu-version">v<?php echo esc_html( HBU_VERSION ); ?></span></h1>
+        <h1>HE BACKS UP <span class="hbu-version">v<?php echo esc_html( HBU_VERSION ); ?></span></h1>
 
         <?php if ( $msg && isset( $notices[ $msg ] ) ) :
             list( $type, $text ) = $notices[ $msg ]; ?>

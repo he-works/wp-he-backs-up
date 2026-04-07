@@ -5,6 +5,7 @@
  * Description: WordPress 사이트 전체(파일 + 데이터베이스)를 백업하고 복구하는 플러그인. 로컬 서버 및 Google Drive 저장 지원.
  * Version:     1.0.0
  * Author:      HE WORKS.
+ * Author URI:  https://he-works.co/
  * License:     GPL-2.0-or-later
  * Text Domain: he-backs-up
  */
@@ -25,6 +26,7 @@ define( 'HBU_GDRIVE_CLIENT_ID',  '616293903678-hc1h8ncqih0bbrt2uq6nm603navai15g.
 define( 'HBU_OAUTH_RELAY_URL',   'https://plugin.he-works.co/he-backs-up/oauth/callback.php' ); // ← 릴레이 서버 URL로 교체
 
 // 핵심 클래스 로드
+require_once HBU_PLUGIN_DIR . 'includes/class-hbu-updater.php';
 require_once HBU_PLUGIN_DIR . 'includes/class-hbu-logger.php';
 require_once HBU_PLUGIN_DIR . 'includes/class-hbu-activator.php';
 require_once HBU_PLUGIN_DIR . 'includes/class-hbu-backup-registry.php';
@@ -47,6 +49,9 @@ add_action( 'plugins_loaded', 'hbu_init' );
 function hbu_init() {
     $cron = new HBU_Cron_Manager();
     $cron->register_hooks();
+
+    $updater = new HBU_Updater( __FILE__ );
+    $updater->register_hooks();
 
     if ( is_admin() ) {
         $admin = new HBU_Admin();
