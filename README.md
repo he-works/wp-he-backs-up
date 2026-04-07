@@ -1,4 +1,4 @@
-# He Backs Up — 플러그인 소스
+# HE BACKS UP — 플러그인 소스
 
 이 폴더가 WordPress에 설치되는 플러그인 본체입니다.
 
