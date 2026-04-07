@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: He Backs Up
- * Plugin URI:  https://github.com/
+ * Plugin Name: HE BACKS UP
+ * Plugin URI:  https://github.com/he-works/wp-he-backs-up.git
  * Description: WordPress 사이트 전체(파일 + 데이터베이스)를 백업하고 복구하는 플러그인. 로컬 서버 및 Google Drive 저장 지원.
  * Version:     1.0.0
- * Author:      He Backs Up
+ * Author:      HE WORKS.
  * License:     GPL-2.0-or-later
  * Text Domain: he-backs-up
  */
