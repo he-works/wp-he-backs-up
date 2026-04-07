@@ -1,0 +1,131 @@
+/* He Backs Up - Admin Styles */
+
+.hbu-wrap h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hbu-version {
+    font-size: 13px;
+    font-weight: normal;
+    color: #8c8f94;
+    background: #f0f0f1;
+    padding: 2px 8px;
+    border-radius: 3px;
+}
+
+/* 카드 레이아웃 */
+.hbu-card {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.hbu-card h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f1;
+    font-size: 15px;
+}
+
+/* 백업 목록 테이블 */
+.hbu-table {
+    margin-top: 10px;
+}
+
+.hbu-table code {
+    font-size: 12px;
+    word-break: break-all;
+}
+
+.hbu-table .hbu-delete-btn {
+    color: #d63638;
+    border-color: #d63638;
+    margin-left: 6px;
+}
+
+.hbu-table .hbu-delete-btn:hover {
+    background: #d63638;
+    color: #fff;
+}
+
+/* 로그 */
+.hbu-log {
+    background: #1d2327;
+    color: #a7aaad;
+    padding: 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.6;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 다음 실행 안내 */
+.hbu-next-run {
+    margin-top: 12px;
+    color: #3858e9;
+    font-size: 13px;
+}
+
+/* 진행 레이블 */
+#hbu-progress-label {
+    color: #3858e9;
+    font-style: italic;
+}
+
+/* 모달 오버레이 */
+.hbu-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hbu-modal {
+    background: #fff;
+    border-radius: 6px;
+    padding: 28px 32px;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.hbu-modal h2 {
+    margin-top: 0;
+    font-size: 18px;
+    color: #d63638;
+}
+
+.hbu-modal input[type="text"] {
+    margin-top: 6px;
+}
+
+#hbu-source-selector {
+    margin: 14px 0;
+    padding: 12px;
+    background: #f6f7f7;
+    border-radius: 4px;
+}
+
+#hbu-source-selector label {
+    display: block;
+    margin: 4px 0;
+}
+
+/* 반응형 */
+@media (max-width: 600px) {
+    .hbu-table th:nth-child(1),
+    .hbu-table td:nth-child(1) {
+        display: none;
+    }
+}
