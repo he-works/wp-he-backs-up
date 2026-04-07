@@ -73,4 +73,31 @@ class HBU_Cron_Manager {
     public static function next_scheduled() {
         return wp_next_scheduled( self::HOOK );
     }
+
+    /**
+     * 관리자 접속 시 wp-cron을 비동기로 핑(ping)하여 예약된 백업이 실행되도록 합니다.
+     * 5분에 한 번만 실행되도록 트랜지언트로 제한합니다.
+     */
+    public static function ping_wp_cron() {
+        // 예약 백업이 활성화되어 있지 않으면 실행하지 않음
+        if ( ! self::next_scheduled() ) {
+            return;
+        }
+
+        // 5분에 한 번만 핑
+        if ( get_transient( 'hbu_cron_pinged' ) ) {
+            return;
+        }
+
+        set_transient( 'hbu_cron_pinged', 1, 5 * MINUTE_IN_SECONDS );
+
+        wp_remote_get(
+            add_query_arg( 'doing_wp_cron', '', site_url( 'wp-cron.php' ) ),
+            array(
+                'blocking'  => false,
+                'timeout'   => 0.01,
+                'sslverify' => apply_filters( 'https_local_ssl_verify', false ),
+            )
+        );
+    }
 }

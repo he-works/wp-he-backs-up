@@ -8,6 +8,8 @@ class HBU_Admin {
     public function register_hooks() {
         add_action( 'admin_menu',          array( $this, 'register_menus' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+        add_action( 'admin_init',          array( $this, 'handle_gdrive_oauth_callback' ) );
+        add_action( 'admin_init',          array( 'HBU_Cron_Manager', 'ping_wp_cron' ) );
 
         // 폼 처리 훅
         add_action( 'admin_post_hbu_run_backup',        array( $this, 'handle_run_backup' ) );
@@ -25,8 +27,8 @@ class HBU_Admin {
 
     public function register_menus() {
         add_menu_page(
-            'He Backs Up',
-            'He Backs Up',
+            'HE BACKS UP',
+            'HE BACKS UP',
             'manage_options',
             'hbu-dashboard',
             array( $this, 'page_dashboard' ),
@@ -78,32 +80,37 @@ class HBU_Admin {
         hbu_page_settings();
     }
 
-    public function page_gdrive() {
-        // ── 릴레이 서버에서 토큰을 받아온 경우 (B방식 OAuth 콜백) ──────
-        if ( isset( $_GET['hbu_at'] ) && isset( $_GET['hbu_nonce'] ) ) {
-            $access_token  = sanitize_text_field( wp_unslash( $_GET['hbu_at'] ) );
-            $refresh_token = sanitize_text_field( wp_unslash( $_GET['hbu_rt'] ?? '' ) );
-            $expires_at    = absint( $_GET['hbu_ex'] ?? 0 );
-            $nonce         = sanitize_text_field( wp_unslash( $_GET['hbu_nonce'] ) );
-
-            if ( HBU_GDrive_Auth::save_tokens_from_relay( $access_token, $refresh_token, $expires_at, $nonce ) ) {
-                // 첫 연결 시 Drive 폴더 자동 생성
-                $token = HBU_GDrive_Auth::get_valid_token();
-                if ( $token && ! get_option( 'hbu_gdrive_folder_id' ) ) {
-                    $folder_id = HBU_GDrive_Client::create_folder( 'He-Backs-Up', $token );
-                    if ( $folder_id ) {
-                        update_option( 'hbu_gdrive_folder_id', $folder_id );
-                    }
-                }
-                // URL에서 토큰 파라미터 제거 후 리다이렉트
-                wp_redirect( admin_url( 'admin.php?page=hbu-gdrive&hbu_msg=connected' ) );
-                exit;
-            } else {
-                wp_redirect( admin_url( 'admin.php?page=hbu-gdrive&hbu_msg=oauth_failed' ) );
-                exit;
-            }
+    public function handle_gdrive_oauth_callback() {
+        // hbu-gdrive 페이지에서 토큰 파라미터가 넘어온 경우에만 처리
+        if (
+            ! isset( $_GET['page'] ) || $_GET['page'] !== 'hbu-gdrive' ||
+            ! isset( $_GET['hbu_at'] ) || ! isset( $_GET['hbu_nonce'] )
+        ) {
+            return;
         }
 
+        $access_token  = sanitize_text_field( wp_unslash( $_GET['hbu_at'] ) );
+        $refresh_token = sanitize_text_field( wp_unslash( $_GET['hbu_rt'] ?? '' ) );
+        $expires_at    = absint( $_GET['hbu_ex'] ?? 0 );
+        $nonce         = sanitize_text_field( wp_unslash( $_GET['hbu_nonce'] ) );
+
+        if ( HBU_GDrive_Auth::save_tokens_from_relay( $access_token, $refresh_token, $expires_at, $nonce ) ) {
+            // 첫 연결 시 Drive 폴더 자동 생성
+            $token = HBU_GDrive_Auth::get_valid_token();
+            if ( $token && ! get_option( 'hbu_gdrive_folder_id' ) ) {
+                $folder_id = HBU_GDrive_Client::create_folder( 'He-Backs-Up', $token );
+                if ( $folder_id ) {
+                    update_option( 'hbu_gdrive_folder_id', $folder_id );
+                }
+            }
+            wp_redirect( admin_url( 'admin.php?page=hbu-gdrive&hbu_msg=connected' ) );
+        } else {
+            wp_redirect( admin_url( 'admin.php?page=hbu-gdrive&hbu_msg=oauth_failed' ) );
+        }
+        exit;
+    }
+
+    public function page_gdrive() {
         require_once HBU_PLUGIN_DIR . 'admin/pages/page-gdrive.php';
         hbu_page_gdrive();
     }

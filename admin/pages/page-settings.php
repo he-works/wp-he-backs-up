@@ -115,8 +115,9 @@ function hbu_page_settings() {
 
                 <div class="notice notice-info inline" style="margin-top:12px;">
                     <p>
-                        <strong>WordPress 기본 Cron은 방문자가 있을 때만 실행됩니다.</strong><br>
-                        더 안정적인 자동 백업을 위해 서버 Cron 설정을 권장합니다:<br>
+                        <strong>✓ 관리자 접속 시 자동 실행됩니다.</strong><br>
+                        이 플러그인은 관리자가 WordPress 대시보드에 접속할 때마다 예약된 백업을 자동으로 실행합니다.<br>
+                        장기간 관리자 접속이 없는 환경에서는 서버 Cron 설정을 추가하면 더욱 안정적입니다:<br>
                         <code>*/5 * * * * curl -s <?php echo esc_url( site_url( 'wp-cron.php?doing_wp_cron' ) ); ?> &gt; /dev/null 2&gt;&amp;1</code>
                     </p>
                 </div>
