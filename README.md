@@ -1,8 +1,10 @@
 # He Backs Up — 플러그인 소스
 
 이 폴더가 WordPress에 설치되는 플러그인 본체입니다.
+
 우측 상단의 "Code > Download.ZIP"을 클릭하거나
-이 **[링크](https://github.com/he-works/wp-he-backs-up/archive/refs/heads/main.zip)**를 클릭해서 다운로드 받아주세요.
+이 **[링크](https://github.com/he-works/wp-he-backs-up/archive/refs/heads/main.zip)** 를 클릭해서 다운로드 받아주세요.
+
 전체 소개 및 설치 방법은 **[웹사이트의 설치가이드](https://plugin.he-works.co/he-backs-up)** 를 참고해주세요.
 
 ## 폴더 구조
