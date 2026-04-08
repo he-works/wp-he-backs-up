@@ -24,9 +24,13 @@ class HBU_Logger {
 
     private static function write( $level, $message ) {
         $log_file = self::get_log_file();
+        $log_dir  = dirname( $log_file );
+        if ( ! file_exists( $log_dir ) ) {
+            wp_mkdir_p( $log_dir );
+        }
         $timestamp = gmdate( 'Y-m-d H:i:s' );
         $line = "[{$timestamp} UTC] [{$level}] {$message}" . PHP_EOL;
-        file_put_contents( $log_file, $line, FILE_APPEND | LOCK_EX );
+        @file_put_contents( $log_file, $line, FILE_APPEND | LOCK_EX );
     }
 
     /**

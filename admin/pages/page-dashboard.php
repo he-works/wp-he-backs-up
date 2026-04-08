@@ -120,21 +120,35 @@ function hbu_page_dashboard() {
     <div id="hbu-restore-modal" style="display:none;" class="hbu-modal-overlay">
         <div class="hbu-modal">
             <h2>⚠️ 복구 확인</h2>
-            <p>이 작업은 <strong>현재 사이트의 모든 파일과 데이터베이스를 덮어씁니다.</strong><br>
+            <p>이 작업은 <strong>현재 사이트의 파일과 데이터베이스를 복구합니다.</strong><br>
                되돌릴 수 없으니 신중하게 진행하세요.</p>
             <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" id="hbu-restore-form">
-                <?php wp_nonce_field( 'hbu_restore_PLACEHOLDER', 'hbu-restore-nonce' ); ?>
+                <?php wp_nonce_field( 'hbu_restore_PLACEHOLDER' ); ?>
                 <input type="hidden" name="action" value="hbu_restore">
                 <input type="hidden" name="backup_id" id="hbu-restore-backup-id">
 
-                <div id="hbu-source-selector">
-                    <label><strong>복구 소스 선택:</strong></label><br>
+                <!-- 복구 소스 선택 -->
+                <div id="hbu-source-selector" style="margin-bottom:12px;">
+                    <label><strong>복구 소스:</strong></label><br>
                     <label><input type="radio" name="restore_source" value="local"> 서버 로컬</label><br>
                     <label><input type="radio" name="restore_source" value="gdrive"> Google Drive</label>
                 </div>
                 <input type="radio" name="restore_source" value="local" id="hbu-source-single" style="display:none;">
 
-                <p style="margin-top:16px;">
+                <!-- 복구 방식 선택 -->
+                <div style="margin-bottom:12px; padding:12px; background:#f6f7f7; border-left:3px solid #d63638;">
+                    <label><strong>복구 방식:</strong></label><br><br>
+                    <label>
+                        <input type="radio" name="restore_mode" value="merge" checked>
+                        <strong>병합 복구</strong> — 백업 파일로 덮어씁니다. 백업 이후 추가된 파일은 유지됩니다.
+                    </label><br><br>
+                    <label>
+                        <input type="radio" name="restore_mode" value="replace">
+                        <strong>완전 교체</strong> — 백업 시점으로 완전히 되돌립니다. 이후 추가된 파일은 <span style="color:#d63638;">모두 삭제</span>됩니다.
+                    </label>
+                </div>
+
+                <p>
                     <label>확인을 위해 아래에 <strong>RESTORE</strong> 를 입력해주세요:</label><br>
                     <input type="text" name="confirm_text" placeholder="RESTORE" class="regular-text" required>
                 </p>

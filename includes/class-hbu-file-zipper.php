@@ -37,7 +37,10 @@ class HBU_File_Zipper {
         }
 
         // wp-content 디렉토리 추가
-        $wp_content_dir  = WP_CONTENT_DIR;
+        $wp_content_dir  = realpath( WP_CONTENT_DIR );
+        if ( ! $wp_content_dir ) {
+            $wp_content_dir = WP_CONTENT_DIR;
+        }
         $storage_real    = realpath( HBU_STORAGE_DIR );
         $added_count     = 0;
 

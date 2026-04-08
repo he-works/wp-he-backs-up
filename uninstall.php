@@ -28,5 +28,7 @@ if ( $timestamp ) {
     wp_unschedule_event( $timestamp, 'hbu_scheduled_backup' );
 }
 
-// 진행 중 트랜지언트 삭제
+// 트랜지언트 삭제
 delete_transient( 'hbu_backup_progress' );
+delete_transient( 'hbu_cron_pinged' );
+delete_transient( 'hbu_github_release' );

@@ -3,9 +3,10 @@
  * Plugin Name: HE BACKS UP
  * Plugin URI:  https://github.com/he-works/wp-he-backs-up.git
  * Description: WordPress 사이트 전체(파일 + 데이터베이스)를 백업하고 복구하는 플러그인. 로컬 서버 및 Google Drive 저장 지원.
- * Version:     1.0.1
+ * Version:     1.0.2
  * Author:      HE WORKS.
  * Author URI:  https://he-works.co/
+ * Donate link: https://github.com/sponsors/he-works
  * License:     GPL-2.0-or-later
  * Text Domain: he-backs-up
  */
@@ -15,10 +16,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // 플러그인 상수 정의
-define( 'HBU_VERSION',     '1.0.1' );
-define( 'HBU_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
-define( 'HBU_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
-define( 'HBU_STORAGE_DIR', HBU_PLUGIN_DIR . 'storage' );
+define( 'HBU_VERSION',    '1.0.2' );
+define( 'HBU_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'HBU_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+
+// 백업 저장 위치 — 플러그인 업데이트 시 삭제되지 않도록 uploads 디렉토리에 저장
+$_hbu_uploads = wp_upload_dir();
+define( 'HBU_STORAGE_DIR', trailingslashit( $_hbu_uploads['basedir'] ) . 'he-backs-up' );
+unset( $_hbu_uploads );
 
 // Google OAuth — 배포자 공유 앱 설정
 // CLIENT_ID는 공개해도 괜찮습니다. CLIENT_SECRET은 oauth-relay/callback.php 에만 존재합니다.

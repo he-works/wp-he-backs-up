@@ -221,7 +221,7 @@ class HBU_GDrive_Auth {
         if ( ! function_exists( 'openssl_encrypt' ) ) {
             return base64_encode( $plaintext );
         }
-        $iv        = openssl_random_pseudo_bytes( 16 );
+        $iv        = function_exists( 'random_bytes' ) ? random_bytes( 16 ) : openssl_random_pseudo_bytes( 16 );
         $encrypted = openssl_encrypt( $plaintext, 'AES-256-CBC', self::get_key(), 0, $iv );
         return base64_encode( $iv . $encrypted );
     }

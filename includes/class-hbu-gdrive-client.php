@@ -71,35 +71,58 @@ class HBU_GDrive_Client {
             $chunk_size = strlen( $chunk );
             $end        = $offset + $chunk_size - 1;
 
-            $chunk_response = wp_remote_request( $upload_uri, array(
-                'method'  => 'PUT',
-                'timeout' => 120,
-                'headers' => array(
-                    'Content-Range' => "bytes {$offset}-{$end}/{$file_size}",
-                    'Content-Type'  => 'application/zip',
-                ),
-                'body' => $chunk,
-            ) );
+            // 일시적 오류에 대한 지수 백오프 재시도 (최대 3회)
+            $chunk_response = null;
+            $transient_codes = array( 408, 429, 500, 502, 503, 504 );
+            for ( $attempt = 1; $attempt <= 3; $attempt++ ) {
+                $chunk_response = wp_remote_request( $upload_uri, array(
+                    'method'  => 'PUT',
+                    'timeout' => 120,
+                    'headers' => array(
+                        'Content-Range' => "bytes {$offset}-{$end}/{$file_size}",
+                        'Content-Type'  => 'application/zip',
+                    ),
+                    'body' => $chunk,
+                ) );
+
+                if ( is_wp_error( $chunk_response ) ) {
+                    HBU_Logger::error( "Drive 청크 업로드 오류 (시도 {$attempt}/3): " . $chunk_response->get_error_message() );
+                    if ( $attempt < 3 ) {
+                        sleep( $attempt * 2 ); // 2초, 4초 대기
+                        continue;
+                    }
+                    fclose( $handle );
+                    return false;
+                }
+
+                $status_code = wp_remote_retrieve_response_code( $chunk_response );
+                if ( ! in_array( $status_code, $transient_codes, true ) ) {
+                    break; // 재시도 불필요
+                }
+
+                HBU_Logger::error( "Drive 일시적 오류 HTTP {$status_code} (시도 {$attempt}/3), 재시도..." );
+                if ( $attempt < 3 ) {
+                    sleep( $attempt * 2 );
+                }
+            }
 
             $offset += $chunk_size;
 
             if ( is_wp_error( $chunk_response ) ) {
                 fclose( $handle );
-                HBU_Logger::error( 'Drive 청크 업로드 오류: ' . $chunk_response->get_error_message() );
+                HBU_Logger::error( 'Drive 청크 업로드 최종 실패' );
                 return false;
             }
 
             $status_code = wp_remote_retrieve_response_code( $chunk_response );
 
             if ( in_array( $status_code, array( 200, 201 ), true ) ) {
-                // 업로드 완료
                 $body    = json_decode( wp_remote_retrieve_body( $chunk_response ), true );
                 $file_id = isset( $body['id'] ) ? $body['id'] : false;
                 break;
             }
 
             if ( $status_code !== 308 ) {
-                // 308 Resume Incomplete 외 예상치 못한 응답
                 fclose( $handle );
                 HBU_Logger::error( "Drive 업로드 오류 (HTTP {$status_code}): " . wp_remote_retrieve_body( $chunk_response ) );
                 return false;

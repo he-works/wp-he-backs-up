@@ -23,6 +23,20 @@ class HBU_Admin {
         add_action( 'wp_ajax_hbu_backup_progress',   array( $this, 'ajax_backup_progress' ) );
         // AJAX: 복구 nonce 동적 발급
         add_action( 'wp_ajax_hbu_get_restore_nonce', array( $this, 'ajax_get_restore_nonce' ) );
+
+        // 플러그인 목록 액션 링크
+        add_filter( 'plugin_action_links_' . plugin_basename( HBU_PLUGIN_DIR . 'he-backs-up.php' ), array( $this, 'add_action_links' ) );
+    }
+
+    /**
+     * 플러그인 목록에 "설정" / "기부" 링크를 추가합니다.
+     */
+    public function add_action_links( $links ) {
+        $custom = array(
+            'settings' => '<a href="' . esc_url( admin_url( 'admin.php?page=hbu-dashboard' ) ) . '">설정</a>',
+            'donate'   => '<a href="https://github.com/sponsors/he-works" target="_blank" rel="noopener noreferrer" style="color:#db61a2; font-weight:600;">♥ Sponsor</a>',
+        );
+        return array_merge( $custom, $links );
     }
 
     public function register_menus() {
@@ -179,7 +193,10 @@ class HBU_Admin {
         }
 
         $source = sanitize_key( $_POST['restore_source'] ?? 'local' );
-        $result = HBU_Restore_Engine::restore( $backup_id, $source );
+        $mode   = in_array( $_POST['restore_mode'] ?? '', array( 'merge', 'replace' ), true )
+                    ? sanitize_key( $_POST['restore_mode'] )
+                    : 'merge';
+        $result = HBU_Restore_Engine::restore( $backup_id, $source, $mode );
 
         if ( $result['success'] ) {
             wp_redirect( admin_url( 'admin.php?page=hbu-dashboard&hbu_msg=restore_ok' ) );

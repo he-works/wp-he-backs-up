@@ -47,19 +47,33 @@ class HBU_DB_Dumper {
             $host_opt = ' --host=' . escapeshellarg( $host ) . ' --port=' . escapeshellarg( $port );
         }
 
+        // 비밀번호를 커맨드라인 인수로 노출하지 않기 위해 임시 설정 파일 사용
+        $cnf_path = sys_get_temp_dir() . '/hbu_my_' . uniqid() . '.cnf';
+        $cnf_lines = array(
+            '[client]',
+            'user='     . DB_USER,
+            'password=' . DB_PASSWORD,
+        );
+        if ( $socket_opt ) {
+            $cnf_lines[] = 'socket=' . $host;
+        } else {
+            $cnf_lines[] = 'host=' . $host;
+            $cnf_lines[] = 'port=' . $port;
+        }
+        file_put_contents( $cnf_path, implode( "\n", $cnf_lines ) . "\n" );
+        chmod( $cnf_path, 0600 );
+
         $cmd = sprintf(
-            '%s --no-tablespaces --single-transaction --quick --lock-tables=false' .
-            '%s%s --user=%s --password=%s %s > %s 2>&1',
+            '%s --defaults-extra-file=%s --no-tablespaces --single-transaction --quick --lock-tables=false%s %s > %s 2>&1',
             escapeshellcmd( $mysqldump ),
-            $host_opt,
-            $socket_opt,
-            escapeshellarg( DB_USER ),
-            escapeshellarg( DB_PASSWORD ),
+            escapeshellarg( $cnf_path ),
+            $socket_opt ? '' : '',   // 소켓은 cnf 파일에 포함됨
             escapeshellarg( DB_NAME ),
             escapeshellarg( $dest_path )
         );
 
         exec( $cmd, $output, $return_code );
+        @unlink( $cnf_path );
 
         if ( $return_code !== 0 ) {
             HBU_Logger::error( 'mysqldump 오류: ' . implode( ' ', $output ) );
@@ -77,7 +91,8 @@ class HBU_DB_Dumper {
         );
 
         // which 명령어로도 탐색
-        exec( 'which mysqldump 2>/dev/null', $out );
+        $out = array();
+        @exec( 'which mysqldump 2>/dev/null', $out );
         if ( ! empty( $out[0] ) ) {
             $candidates[] = trim( $out[0] );
         }
@@ -111,6 +126,10 @@ class HBU_DB_Dumper {
 
             // CREATE TABLE
             $create = $wpdb->get_row( "SHOW CREATE TABLE `{$table}`", ARRAY_N );
+            if ( empty( $create[1] ) ) {
+                HBU_Logger::error( 'CREATE TABLE 조회 실패: ' . $table );
+                continue;
+            }
             fwrite( $handle, "\nDROP TABLE IF EXISTS `{$table}`;\n" );
             fwrite( $handle, $create[1] . ";\n\n" );
 
@@ -129,9 +148,15 @@ class HBU_DB_Dumper {
                 }
 
                 foreach ( $rows as $row ) {
-                    $escaped = array_map( array( $wpdb, '_real_escape' ), $row );
-                    $values  = implode( "', '", $escaped );
-                    fwrite( $handle, "INSERT INTO `{$table}` VALUES ('{$values}');\n" );
+                    $parts = array();
+                    foreach ( $row as $val ) {
+                        if ( is_null( $val ) ) {
+                            $parts[] = 'NULL';
+                        } else {
+                            $parts[] = "'" . $wpdb->_real_escape( $val ) . "'";
+                        }
+                    }
+                    fwrite( $handle, "INSERT INTO `{$table}` VALUES (" . implode( ',', $parts ) . ");\n" );
                 }
 
                 $offset += $chunk;
