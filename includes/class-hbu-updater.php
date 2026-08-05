@@ -172,16 +172,29 @@ class HBU_Updater {
      * @return string
      */
     private function get_download_url( $release ) {
-        // Release에 첨부된 assets 중 ZIP 파일 우선 사용
+        // Release에 첨부된 ZIP을 우선 사용합니다.
+        // content_type은 업로드 방식에 따라 application/x-zip-compressed 등으로
+        // 붙을 수 있으므로 확장자도 함께 확인합니다.
         if ( ! empty( $release['assets'] ) ) {
             foreach ( $release['assets'] as $asset ) {
-                if ( isset( $asset['content_type'] ) && $asset['content_type'] === 'application/zip' ) {
+                if ( empty( $asset['browser_download_url'] ) ) {
+                    continue;
+                }
+
+                $is_zip_type = isset( $asset['content_type'] )
+                    && stripos( $asset['content_type'], 'zip' ) !== false;
+                $is_zip_name = isset( $asset['name'] )
+                    && strtolower( substr( $asset['name'], -4 ) ) === '.zip';
+
+                if ( $is_zip_type || $is_zip_name ) {
                     return $asset['browser_download_url'];
                 }
             }
         }
 
-        // 첨부 ZIP이 없으면 GitHub 자동 생성 소스 ZIP 사용
-        return 'https://github.com/' . self::GITHUB_USER . '/' . self::GITHUB_REPO . '/archive/refs/heads/main.zip';
+        // 첨부 ZIP이 없으면 해당 태그의 소스 ZIP을 사용합니다.
+        // (main 브랜치가 아니라 릴리스된 버전을 정확히 설치하기 위함)
+        return 'https://github.com/' . self::GITHUB_USER . '/' . self::GITHUB_REPO
+            . '/archive/refs/tags/' . rawurlencode( $release['tag_name'] ) . '.zip';
     }
 }
