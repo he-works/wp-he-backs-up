@@ -118,13 +118,14 @@ class HBU_Backup_Engine {
 
         HBU_Backup_Registry::add( $entry );
 
-        // 보존 정책 적용
-        $retention = isset( $settings['local_retention_count'] ) ? (int) $settings['local_retention_count'] : 10;
-        if ( $local_enabled && $retention > 0 ) {
-            HBU_Local_Storage::enforce_retention( $retention );
+        // 보존 정책 적용 — 로컬과 Drive는 각각 별도의 개수를 사용합니다.
+        $local_retention  = isset( $settings['local_retention_count'] )  ? (int) $settings['local_retention_count']  : 10;
+        $gdrive_retention = isset( $settings['gdrive_retention_count'] ) ? (int) $settings['gdrive_retention_count'] : 30;
+        if ( $local_enabled && $local_retention > 0 ) {
+            HBU_Local_Storage::enforce_retention( $local_retention );
         }
-        if ( $gdrive_enabled && $retention > 0 ) {
-            self::enforce_gdrive_retention( $retention );
+        if ( $gdrive_enabled && $gdrive_retention > 0 ) {
+            self::enforce_gdrive_retention( $gdrive_retention );
         }
 
         delete_transient( 'hbu_backup_progress' );

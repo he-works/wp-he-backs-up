@@ -114,6 +114,43 @@ class HBU_Cron_Manager {
     }
 
     /**
+     * 예약 백업이 정상 동작 중인지 진단합니다.
+     *
+     * 예약 시각이 1시간 이상 지났는데도 실행되지 않았다면 WP-Cron이 동작하지
+     * 않는 환경(트래픽 없음 등)으로 보고 경고를 반환합니다.
+     *
+     * @return array{status:string, message:string} status: 'ok' | 'warning' | 'inactive'
+     */
+    public static function get_health() {
+        $next = self::next_scheduled();
+
+        if ( ! $next ) {
+            return array(
+                'status'  => 'inactive',
+                'message' => '자동 백업이 꺼져 있습니다.',
+            );
+        }
+
+        if ( $next < time() - HOUR_IN_SECONDS ) {
+            $overdue = human_time_diff( $next, time() );
+            return array(
+                'status'  => 'warning',
+                'message' => "예약 시각이 {$overdue} 지났지만 백업이 실행되지 않았습니다. 사이트 방문자가 거의 없는 환경으로 보입니다. 아래 서버 Cron을 설정해주세요.",
+            );
+        }
+
+        $last_ping = (int) get_option( 'hbu_last_cron_ping', 0 );
+        $ping_info = $last_ping
+            ? ' (마지막 확인: ' . human_time_diff( $last_ping, time() ) . ' 전)'
+            : '';
+
+        return array(
+            'status'  => 'ok',
+            'message' => '예약 백업이 정상적으로 대기 중입니다.' . $ping_info,
+        );
+    }
+
+    /**
      * 관리자 접속 시 wp-cron을 비동기로 핑(ping)하여 예약된 백업이 실행되도록 합니다.
      * 5분에 한 번만 실행되도록 트랜지언트로 제한합니다.
      */
@@ -129,6 +166,7 @@ class HBU_Cron_Manager {
         }
 
         set_transient( 'hbu_cron_pinged', 1, 5 * MINUTE_IN_SECONDS );
+        update_option( 'hbu_last_cron_ping', time(), false );
 
         wp_remote_get(
             add_query_arg( 'doing_wp_cron', '', site_url( 'wp-cron.php' ) ),

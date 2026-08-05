@@ -84,6 +84,7 @@ class HBU_Activator {
             'storage_local_enabled'  => 1,
             'storage_gdrive_enabled' => 0,
             'local_retention_count'  => 10,
+            'gdrive_retention_count' => 30,
             'schedule_enabled'       => 0,
             'schedule_frequency'     => 'hbu_weekly',
         );

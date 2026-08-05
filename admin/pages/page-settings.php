@@ -8,6 +8,7 @@ function hbu_page_settings() {
         'storage_local_enabled'  => 1,
         'storage_gdrive_enabled' => 0,
         'local_retention_count'  => 10,
+        'gdrive_retention_count' => 30,
         'schedule_enabled'       => 0,
         'schedule_frequency'     => 'hbu_weekly',
     ) );
@@ -77,6 +78,18 @@ function hbu_page_settings() {
                             <p class="description">이 개수를 초과하면 오래된 로컬 백업이 자동으로 삭제됩니다.</p>
                         </td>
                     </tr>
+                    <tr>
+                        <th><label for="gdrive_retention_count">최대 Google Drive 보존 개수</label></th>
+                        <td>
+                            <input type="number" id="gdrive_retention_count" name="gdrive_retention_count"
+                                value="<?php echo esc_attr( $settings['gdrive_retention_count'] ); ?>"
+                                min="1" max="999" class="small-text">
+                            <p class="description">
+                                이 개수를 초과하면 오래된 백업이 Google Drive에서 자동으로 삭제됩니다.<br>
+                                Drive는 용량이 넉넉하므로 서버보다 넉넉하게 설정하는 것을 권장합니다.
+                            </p>
+                        </td>
+                    </tr>
                 </table>
             </div>
 
@@ -113,13 +126,32 @@ function hbu_page_settings() {
                     </tr>
                 </table>
 
-                <div class="notice notice-info inline" style="margin-top:12px;">
+                <?php
+                $health       = HBU_Cron_Manager::get_health();
+                $notice_class = array(
+                    'ok'       => 'notice-success',
+                    'warning'  => 'notice-warning',
+                    'inactive' => 'notice-info',
+                );
+                $icon = array( 'ok' => '✓', 'warning' => '⚠️', 'inactive' => 'ℹ️' );
+                ?>
+                <div class="notice <?php echo esc_attr( $notice_class[ $health['status'] ] ); ?> inline" style="margin-top:12px;">
                     <p>
-                        <strong>✓ 관리자 접속 시 자동 실행됩니다.</strong><br>
-                        이 플러그인은 관리자가 WordPress 대시보드에 접속할 때마다 예약된 백업을 자동으로 실행합니다.<br>
-                        장기간 관리자 접속이 없는 환경에서는 서버 Cron 설정을 추가하면 더욱 안정적입니다:<br>
-                        <code>*/5 * * * * curl -s <?php echo esc_url( site_url( 'wp-cron.php?doing_wp_cron' ) ); ?> &gt; /dev/null 2&gt;&amp;1</code>
+                        <strong><?php echo esc_html( $icon[ $health['status'] ] ); ?> 자동 실행 상태</strong><br>
+                        <?php echo esc_html( $health['message'] ); ?>
                     </p>
+                    <?php if ( $health['status'] !== 'inactive' ) : ?>
+                        <p style="margin-top:8px;">
+                            이 플러그인은 관리자가 WordPress 대시보드에 접속할 때마다 예약된 백업을 자동으로 확인·실행합니다.
+                            <strong>별도의 서버 설정은 필요하지 않습니다.</strong>
+                        </p>
+                        <?php if ( $health['status'] === 'warning' ) : ?>
+                            <p>
+                                서버에 SSH로 접속해 <code>crontab -e</code> 를 실행한 뒤 아래 한 줄을 추가하세요:<br>
+                                <code>*/5 * * * * curl -s <?php echo esc_url( site_url( 'wp-cron.php?doing_wp_cron' ) ); ?> &gt; /dev/null 2&gt;&amp;1</code>
+                            </p>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
             </div>
 

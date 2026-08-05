@@ -16,6 +16,7 @@ $options = array(
     'hbu_gdrive_folder_id',
     'hbu_backup_registry',
     'hbu_plugin_version',
+    'hbu_last_cron_ping',
 );
 
 foreach ( $options as $option ) {
